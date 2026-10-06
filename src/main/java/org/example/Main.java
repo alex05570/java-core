@@ -1,18 +1,64 @@
 package org.example;
 
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 public class Main {
-    public static void main(String[] args) throws InterruptedException {
-        DataAggregator aggregator = new DataAggregator();
+    public static void main(String[] args) {
+        test();
+    }
 
-        System.out.println("Старт сбора данных...");
-        long start = System.currentTimeMillis();
+    enum DayOfWeek {
+        MONDAY,
+        TUESDAY,
+        WEDNESDAY,
+        THURSDAY,
+        FRIDAY,
+        SATURDAY,
+        SUNDAY
+    }
 
-        ProductInfo info = aggregator.aggregateProductInfo("Ноутбук");
+    static class WorkSheet {
+        String name;
+        List<DayOfWeek> workDays;
 
-        long elapsed = System.currentTimeMillis() - start;
-        System.out.println(info);
-        System.out.println("Время: " + elapsed + " мс");
+        public WorkSheet(String name, List<DayOfWeek> workDays) {
+            this.name = name;
+            this.workDays = workDays;
+        }
 
-        aggregator.shutdown();
+        public String getName() {
+            return name;
+        }
+
+        public List<DayOfWeek> getWorkDays() {
+            return workDays;
+        }
+    }
+
+    static void test() {
+        var denSheet = new WorkSheet("Денис",
+                List.of(DayOfWeek.TUESDAY, DayOfWeek.THURSDAY, DayOfWeek.SUNDAY));
+        var benSheet = new WorkSheet("Бен",
+                List.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.SATURDAY));
+        var lisSheet = new WorkSheet("Лиза",
+                List.of(DayOfWeek.THURSDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY));
+        var sheets = List.of(denSheet, benSheet, lisSheet);
+
+        sheets.stream()
+                .map(WorkSheet::getWorkDays)
+                .flatMap(List::stream)
+                .collect(Collectors.groupingBy(
+                        Function.identity(),
+                        Collectors.counting()
+                ))
+
+                .entrySet()
+                .stream()
+                .filter(entry -> entry.getValue() > 1)
+                .map(Map.Entry::getKey)
+                .forEach(System.out::println);
     }
 }
